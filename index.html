@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+		.jj-pagination{
+			
+		}
+		.jj-pagination::after{
+			content: "";
+			display: block;
+			clear: both;
+			height: 0;
+			visibility: hidden;
+		}
+		.jj-pagination-item{
+			float: left;
+			padding: 3px 6px;
+			border-width: 1px 0 1px 1px;
+			border-style: solid;
+			border-color: red;
+			cursor: pointer;
+		}
+		.jj-pagination-item:last-child{
+			border-right: 1px solid red;
+		}
+		.jj-pagination-current{
+			background-color: blue;
+		}
+		.jj-pagination-disabled{
+			cursor: not-allowed;
+			background-color: gray;
+		}
+	</style>
+</head>
+<body>
+	<!-- <div class="jj-pagination">
+		<span class="jj-pagination-item">首页</span>
+		<span class="jj-pagination-item">上一页</span>
+		<span :class="[{val == current : 'jj-pagination-current'}, 'jj-pagination-item']" v-for="index in pages">{{index}}</span>
+		<span class="jj-pagination-item">下一页</span>
+		<span class="jj-pagination-item">末页</span>
+	</div> -->
+	<div id="app">
+		<jj-pagination :pages="3" :cur-page="3" :total="5"></jj-pagination>
+	</div>
+	<script src="https://unpkg.com/vue@2.4.4/dist/vue.js"></script>
+	<script>
+		Vue.component('jj-pagination', {
+			template: `<div class="jj-pagination">
+				<span class="jj-pagination-item" @click="gotoFirst">首页</span>
+				<span :class="[{'jj-pagination-disabled': canPrevClick},'jj-pagination-item']" @click="prev">上一页</span>
+				<span v-for="(val, index) in arr" :class="[{'jj-pagination-current': val == current}, 'jj-pagination-item']"  @click="handleClick(val)">{{val}}</span>
+				<span :class="[{'jj-pagination-disabled': canNextClick},'jj-pagination-item']" @click="next">下一页</span>
+				<span class="jj-pagination-item" @click="gotoLast">末页</span>
+			</div>`,
+			props:['pages','curPage','total'],
+			data() { 
+				return {
+					arr: [],
+					current: 1//默认第一页
+				}
+			},
+			methods: {
+				compare() {
+					var pages = this.pages,
+						total = this.total,
+						current = this.current,
+						that = this,
+						arr = [];
+					if(total <= pages) {
+						for(var i = 1; i <= total; i++) {
+							arr.push(i);
+						}
+					}else {
+						var gap = Math.floor(pages/2),//看能否补足pages宽度
+							left = current - gap,
+							right = current + gap;
+						if(left > 1 && right < total) {
+							for(;left <= right;left++) {
+								arr.push(left);
+							}
+							arr.unshift('...');
+							arr.push('...');
+						}else if(left <= 1) {
+							for(var i = 1; i <= pages; i++) {
+								arr.push(i);
+							}
+							arr.push('...');
+						}else if(right >= total) {
+							var i = total - pages + 1;
+							arr.push('...');
+							for(; i <= total; i++) {
+								arr.push(i);
+							}
+						}
+					}
+					this.$nextTick(function() {
+						that.arr = arr;
+					})
+				},
+				handleClick(val) {
+					if(!isNaN(val)) {//如果不是...
+						this.current = val;
+					}
+				},
+				next() {
+					if(!this.canNextClick) {
+						this.current++
+					}
+				},
+				prev() {
+					if(!this.canPrevClick) {
+						this.current--
+					}
+				},
+				gotoFirst() {
+					this.current = 1;
+				},
+				gotoLast() {
+					this.current = this.total;
+				}
+			},
+			created() {
+				this.current = this.curPage;
+				this.compare();
+			},
+			watch: {
+				current() {
+					this.compare()
+				}
+			},
+			computed: {
+				canPrevClick() {
+					return this.current == 1 ? true : false; 
+				},
+				canNextClick() {
+					return this.current == this.total ? true : false;
+				}
+			}
+		})
+		new Vue({
+			el: '#app'
+		})
+	</script>
+</body>
+</html>
